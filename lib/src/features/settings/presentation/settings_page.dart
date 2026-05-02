@@ -22,12 +22,12 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   static const _seedColors = [
-    0xFF0F766E,
-    0xFF2563EB,
-    0xFFE11D48,
-    0xFF7C3AED,
-    0xFFEA580C,
-    0xFF16A34A,
+    0xFF0F4C81, // 2020 Classic Blue
+    0xFFF5DF4D, // 2021 Illuminating
+    0xFF6667AB, // 2022 Very Peri
+    0xFFBB2649, // 2023 Viva Magenta
+    0xFFFFBE98, // 2024 Peach Fuzz
+    0xFFA47864, // 2025 Mocha Mousse
   ];
 
   bool _isBusy = false;
@@ -86,53 +86,111 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 12),
-                          SegmentedButton<ThemeMode>(
+                          SegmentedButton<String>(
                             segments: const [
                               ButtonSegment(
-                                value: ThemeMode.system,
-                                icon: Icon(Icons.brightness_auto),
-                                label: Text('系统'),
+                                value: 'color',
+                                icon: Icon(Icons.palette_outlined),
+                                label: Text('颜色主题'),
                               ),
                               ButtonSegment(
-                                value: ThemeMode.light,
-                                icon: Icon(Icons.light_mode),
-                                label: Text('浅色'),
-                              ),
-                              ButtonSegment(
-                                value: ThemeMode.dark,
-                                icon: Icon(Icons.dark_mode),
-                                label: Text('深色'),
+                                value: 'colorful',
+                                icon: Icon(Icons.auto_awesome),
+                                label: Text('多彩主题'),
                               ),
                             ],
-                            selected: {theme.themeMode},
+                            selected: {theme.themeType},
                             onSelectionChanged: _isBusy
                                 ? null
                                 : (value) => ref
                                       .read(appThemeControllerProvider.notifier)
-                                      .setThemeMode(value.first),
+                                      .setThemeType(value.first),
                           ),
                           const SizedBox(height: 16),
                           Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
+                            spacing: 8,
                             children: [
-                              for (final color in _seedColors)
-                                _ThemeColorOption(
-                                  colorValue: color,
-                                  selected: theme.seedColorValue == color,
-                                  enabled: !_isBusy,
-                                  onTap: () => ref
-                                      .read(appThemeControllerProvider.notifier)
-                                      .setSeedColor(color),
+                              ChoiceChip(
+                                avatar: const Icon(Icons.light_mode, size: 18),
+                                label: const Text('浅色'),
+                                selected: theme.themeMode == ThemeMode.light,
+                                onSelected: _isBusy
+                                    ? null
+                                    : (_) => ref
+                                          .read(
+                                            appThemeControllerProvider.notifier,
+                                          )
+                                          .setThemeMode(ThemeMode.light),
+                              ),
+                              ChoiceChip(
+                                avatar: const Icon(Icons.dark_mode, size: 18),
+                                label: const Text('深色'),
+                                selected: theme.themeMode == ThemeMode.dark,
+                                onSelected: _isBusy
+                                    ? null
+                                    : (_) => ref
+                                          .read(
+                                            appThemeControllerProvider.notifier,
+                                          )
+                                          .setThemeMode(ThemeMode.dark),
+                              ),
+                              ChoiceChip(
+                                avatar: const Icon(
+                                  Icons.brightness_auto,
+                                  size: 18,
                                 ),
-                              _ThemeColorPaletteOption(
-                                colorValue: theme.seedColorValue,
-                                selected: usesCustomColor,
-                                enabled: !_isBusy,
-                                onTap: _pickCustomThemeColor,
+                                label: const Text('跟随系统'),
+                                selected: theme.themeMode == ThemeMode.system,
+                                onSelected: _isBusy
+                                    ? null
+                                    : (_) => ref
+                                          .read(
+                                            appThemeControllerProvider.notifier,
+                                          )
+                                          .setThemeMode(ThemeMode.system),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 16),
+                          if (theme.themeType == 'color')
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: [
+                                for (final color in _seedColors)
+                                  _ThemeColorOption(
+                                    colorValue: color,
+                                    selected:
+                                        theme.seedColorValue == color,
+                                    enabled: !_isBusy,
+                                    onTap: () => ref
+                                        .read(
+                                          appThemeControllerProvider.notifier,
+                                        )
+                                        .setSeedColor(color),
+                                  ),
+                                _ThemeColorPaletteOption(
+                                  colorValue: theme.seedColorValue,
+                                  selected: usesCustomColor,
+                                  enabled: !_isBusy,
+                                  onTap: _pickCustomThemeColor,
+                                ),
+                              ],
+                            )
+                          else
+                            Column(
+                              children: [
+                                _ColorfulVariantTile(
+                                  title: 'test1',
+                                  subtitle: '极光多彩 — 紫粉青三色碰撞',
+                                  selected: theme.colorfulVariant == 'test1',
+                                  enabled: !_isBusy,
+                                  onTap: () => ref
+                                      .read(appThemeControllerProvider.notifier)
+                                      .setColorfulVariant('test1'),
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                     ),
@@ -611,6 +669,91 @@ class _ThemeOptionFrame extends StatelessWidget {
           ),
           child: Center(
             child: Opacity(opacity: enabled ? 1 : 0.45, child: child),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ColorfulVariantTile extends StatelessWidget {
+  const _ColorfulVariantTile({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: selected
+                  ? scheme.primaryContainer
+                  : scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16),
+              border: selected
+                  ? Border.all(color: scheme.primary, width: 1.5)
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  size: 22,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: selected
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: selected
+                              ? scheme.onPrimaryContainer
+                                  .withValues(alpha: 0.7)
+                              : scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (selected)
+                  Icon(Icons.check_circle, size: 20, color: scheme.primary),
+              ],
+            ),
           ),
         ),
       ),
