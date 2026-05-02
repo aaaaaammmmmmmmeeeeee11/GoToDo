@@ -4,7 +4,9 @@ import '../database/app_database.dart';
 
 class SettingsKeys {
   static const themeMode = 'theme_mode';
+  static const themeType = 'theme_type';
   static const seedColor = 'seed_color';
+  static const colorfulVariant = 'colorful_variant';
   static const notificationSound = 'notification_sound';
   static const notificationVibration = 'notification_vibration';
 }
@@ -53,6 +55,24 @@ class SettingsRepository {
 
   Future<void> setSeedColor(int colorValue) {
     return writeSetting(SettingsKeys.seedColor, colorValue.toString());
+  }
+
+  Future<String> readThemeType() async {
+    final value = await readSetting(SettingsKeys.themeType);
+    return value == 'colorful' ? 'colorful' : 'color';
+  }
+
+  Future<void> setThemeType(String type) {
+    return writeSetting(SettingsKeys.themeType, type);
+  }
+
+  Future<String> readColorfulVariant() async {
+    final value = await readSetting(SettingsKeys.colorfulVariant);
+    return value == 'test1' ? 'test1' : 'test1';
+  }
+
+  Future<void> setColorfulVariant(String variant) {
+    return writeSetting(SettingsKeys.colorfulVariant, variant);
   }
 
   Future<void> setBool(String key, bool value) {

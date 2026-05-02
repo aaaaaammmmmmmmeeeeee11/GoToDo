@@ -22,10 +22,28 @@ class GoToDoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: AppTheme.light(themeSettings.seedColorValue),
-      darkTheme: AppTheme.dark(themeSettings.seedColorValue),
+      theme: _colorfulLight(themeSettings)
+          ?? AppTheme.light(themeSettings.seedColorValue),
+      darkTheme: _colorfulDark(themeSettings)
+          ?? AppTheme.dark(themeSettings.seedColorValue),
       themeMode: themeSettings.themeMode,
       home: const MainShell(),
     );
   }
+}
+
+ThemeData? _colorfulLight(AppThemeSettings s) {
+  if (s.themeType != 'colorful') return null;
+  return switch (s.colorfulVariant) {
+    'test1' => AppTheme.colorfulLight(),
+    _ => AppTheme.colorfulLight(),
+  };
+}
+
+ThemeData? _colorfulDark(AppThemeSettings s) {
+  if (s.themeType != 'colorful') return null;
+  return switch (s.colorfulVariant) {
+    'test1' => AppTheme.colorfulDark(),
+    _ => AppTheme.colorfulDark(),
+  };
 }
